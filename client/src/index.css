@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-driveBlue: #1a73e8;
+  --color-driveLightBlue: #e8f0fe;
+  --color-driveGray: #f8f9fa;
+  --color-driveText: #202124;
+  --color-driveBorder: #dadce0;
+}
+
+@layer base {
+  body {
+    @apply bg-driveGray text-driveText font-sans antialiased;
+  }
+}
