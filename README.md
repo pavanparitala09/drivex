@@ -2,18 +2,20 @@
 
 A full-stack file management platform inspired by Google Drive, built using the MERN stack (MongoDB, Express, React, Node.js). It provides a secure, fast, and intuitive interface for storing and managing your personal files in the cloud.
 
-## 🚀 Features
+## Features
 
-- **Authentication & Security:** Secure user registration and login using JSON Web Tokens (JWT).
+- **Authentication and Security:** Secure user registration and login using JSON Web Tokens (JWT).
 - **File Management:** Upload files of any type (up to 500MB). Files are securely hosted via Cloudinary.
 - **Folder Navigation:** Create nested folders, move files, and navigate seamlessly through breadcrumbs.
-- **Trash & Soft Deletion:** Accidentally deleted a file? It goes to the Trash bin where it can be restored.
+- **Trash and Soft Deletion:** Deleted files are moved to the Trash bin where they can be restored.
 - **Automated Cleanup:** A backend cron job automatically purges files from the Trash after 15 days to free up space.
-- **Starred Items:** Quick access to your most important files and folders.
+- **Starred Items:** Quick access to starred files and folders.
 - **File Sharing:** Share files with other registered users, assigning them 'view' or 'edit' permissions.
 - **Storage Quotas:** Real-time tracking of storage used against the user's 500MB limit.
+- **AI Auto Rename:** Uses Gemini 2.5 Flash to automatically rename files based on metadata and structure.
+- **Multimodal File Chat:** Real-time chat workspace inside preview modals to query file contents directly.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 **Frontend:**
 - React (Vite)
@@ -22,13 +24,64 @@ A full-stack file management platform inspired by Google Drive, built using the 
 - Axios (API Requests)
 
 **Backend:**
-- Node.js & Express.js
-- MongoDB & Mongoose (Database & ORM)
-- Cloudinary & Multer (File Upload & Cloud Storage)
+- Node.js and Express.js
+- MongoDB and Mongoose (Database and ORM)
+- Cloudinary and Multer (File Upload and Cloud Storage)
 - node-cron (Scheduled Tasks)
 - JSON Web Tokens (Auth)
 
-## ⚙️ Local Development Setup
+## Folder Structure
+
+Below is the directory structure of the DriveX project:
+
+```
+.
+├── client
+│   ├── public
+│   └── src
+│       ├── assets
+│       ├── components
+│       │   ├── FilePreviewModal.jsx
+│       │   ├── FolderModal.jsx
+│       │   ├── Layout.jsx
+│       │   ├── RenameModal.jsx
+│       │   ├── ShareLinkModal.jsx
+│       │   └── UploadModal.jsx
+│       ├── pages
+│       │   ├── Dashboard.jsx
+│       │   ├── DocumentEditor.jsx
+│       │   ├── Login.jsx
+│       │   ├── PublicShareView.jsx
+│       │   ├── SharedFiles.jsx
+│       │   ├── StarredFiles.jsx
+│       │   ├── StorageAnalytics.jsx
+│       │   ├── TaggedFiles.jsx
+│       │   └── Trash.jsx
+│       ├── store
+│       └── utils
+├── server
+│   ├── config
+│   ├── controllers
+│   │   ├── authController.js
+│   │   ├── cleanupController.js
+│   │   ├── fileController.js
+│   │   ├── folderController.js
+│   │   ├── publicShareController.js
+│   │   └── shareController.js
+│   ├── jobs
+│   ├── middlewares
+│   ├── models
+│   ├── routes
+│   │   ├── auth.js
+│   │   ├── files.js
+│   │   ├── folders.js
+│   │   ├── publicShare.js
+│   │   └── share.js
+│   └── utils
+└── README.md
+```
+
+## Local Development Setup
 
 ### Prerequisites
 - Node.js (v16+)
@@ -60,17 +113,17 @@ CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
 Start the backend server:
 ```bash
-npm run dev
+node server.js
 ```
 
 ### 3. Frontend Setup
-Open a new terminal window, navigate to the client directory, and install dependencies:
+Navigate to the client directory and install dependencies:
 ```bash
-cd client
+cd ../client
 npm install
 ```
 
-Create a `.env` file in the `client` directory (if needed):
+Create a `.env` file in the `client` directory:
 ```env
 VITE_API_URL=http://localhost:5000/api
 ```
@@ -81,7 +134,32 @@ npm run dev
 ```
 
 ### 4. Access the App
-Open your browser and navigate to `http://localhost:3000` (or the port Vite provides).
+Open your browser and navigate to `http://localhost:5173`.
 
-## 📄 License
-This project is open source and available under the [MIT License](LICENSE).
+## How to Build for Production
+
+### Build the Frontend
+To compile and minify the frontend assets for production:
+1. Navigate to the client directory:
+   ```bash
+   cd client
+   ```
+2. Run the build script:
+   ```bash
+   npm run build
+   ```
+This creates a `dist` directory in the `client` folder, containing the production-ready static assets.
+
+To preview the production build locally, run:
+```bash
+npm run preview
+```
+
+### Run the Backend
+Ensure the backend server runs with the proper production environment variables set. Start the server using:
+```bash
+node server.js
+```
+
+## License
+This project is open source and available under the MIT License.

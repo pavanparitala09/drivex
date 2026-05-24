@@ -58,6 +58,22 @@ const fileSchema = new mongoose.Schema({
       default: 'view'
     }
   }],
+  tags: [{
+    name: { type: String, required: true },
+    color: { type: String, required: true }
+  }],
+  shareToken: {
+    type: String,
+    default: null
+  },
+  shareExpiresAt: {
+    type: Date,
+    default: null
+  },
+  sharePassword: {
+    type: String,
+    default: null
+  },
 }, { timestamps: true });
 
 const File = mongoose.model('File', fileSchema);

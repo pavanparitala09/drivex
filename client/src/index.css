@@ -1,15 +1,33 @@
 @import "tailwindcss";
 
 @theme {
-  --color-driveBlue: #1a73e8;
-  --color-driveLightBlue: #e8f0fe;
-  --color-driveGray: #f8f9fa;
-  --color-driveText: #202124;
-  --color-driveBorder: #dadce0;
+  --color-driveBlue: #4f46e5; /* Indigo-600 */
+  --color-driveLightBlue: #e0e7ff; /* Indigo-100 */
+  --color-driveGray: #f1f5f9; /* Slate-100 */
+  --color-driveText: #1e293b; /* Slate-800 */
+  --color-driveBorder: #e2e8f0; /* Slate-200 */
 }
 
 @layer base {
   body {
     @apply bg-driveGray text-driveText font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .glass {
+    @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-lg;
+  }
+  
+  .glass-dark {
+    @apply bg-slate-900/70 backdrop-blur-lg border border-slate-700/50 shadow-lg;
   }
 }

@@ -1,5 +1,8 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { OAuth2Client } from 'google-auth-library';
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Generate JWT
 const generateToken = (id) => {
@@ -8,79 +11,49 @@ const generateToken = (id) => {
   });
 };
 
-// @desc    Register new user
-// @route   POST /api/auth/register
+// @desc    Authenticate with Google
+// @route   POST /api/auth/google
 // @access  Public
-export const register = async (req, res) => {
+export const googleAuth = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-
-    // Check if user exists
-    const userExists = await User.findOne({ email });
-
-    if (userExists) {
-      return res.status(400).json({ success: false, message: 'User already exists' });
-    }
-
-    // Create user
-    const user = await User.create({
-      name,
-      email,
-      password,
+    const { token } = req.body;
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture: avatar } = payload;
 
-    if (user) {
-      res.status(201).json({
-        success: true,
-        data: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          storageUsed: user.storageUsed,
-          token: generateToken(user._id),
-        },
-      });
-    } else {
-      res.status(400).json({ success: false, message: 'Invalid user data' });
-    }
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// @desc    Authenticate a user
-// @route   POST /api/auth/login
-// @access  Public
-export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Check for user email
-    const user = await User.findOne({ email }).select('+password');
+    let user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        avatar,
+      });
+    } else {
+      // Update avatar if changed
+      user.avatar = avatar;
+      if (!user.googleId) user.googleId = googleId;
+      await user.save();
     }
 
-    // Check if password matches
-    const isMatch = await user.matchPassword(password);
-
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
-
-    res.json({
+    res.status(200).json({
       success: true,
       data: {
         _id: user._id,
         name: user.name,
         email: user.email,
+        avatar: user.avatar,
         storageUsed: user.storageUsed,
         token: generateToken(user._id),
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Google Auth Error:', error);
+    res.status(401).json({ success: false, message: 'Google authentication failed' });
   }
 };
 

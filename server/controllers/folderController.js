@@ -7,10 +7,11 @@ import { getResourceType } from '../utils/cloudinaryUtils.js';
 // @access  Private
 export const createFolder = async (req, res) => {
   try {
-    const { name, parentFolder } = req.body;
+    const { name, parentFolder, color } = req.body;
 
     const folder = await Folder.create({
       name,
+      color: color || '',
       parentFolder: parentFolder || null,
       userId: req.user.id,
     });
@@ -29,7 +30,7 @@ export const createFolder = async (req, res) => {
 // @access  Private
 export const getFolders = async (req, res) => {
   try {
-    const { parentFolder, isStarred, isTrashed } = req.query;
+    const { parentFolder, isStarred, isTrashed, tag } = req.query;
 
     let query = {
       userId: req.user.id,
@@ -44,10 +45,15 @@ export const getFolders = async (req, res) => {
       } else {
         if (parentFolder) {
           query.parentFolder = parentFolder;
-        } else if (parentFolder === 'null' || !parentFolder) {
+        } else if (parentFolder === 'null' || (!parentFolder && !tag)) {
           query.parentFolder = null;
         }
       }
+    }
+
+    if (tag) {
+      query['tags.name'] = tag;
+      delete query.parentFolder; // query across all parents
     }
 
     const folders = await Folder.find(query).sort({ name: 1 });
@@ -66,11 +72,15 @@ export const getFolders = async (req, res) => {
 // @access  Private
 export const updateFolder = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, color } = req.body;
+
+    let updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (color !== undefined) updateData.color = color;
 
     const folder = await Folder.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
-      { name },
+      updateData,
       { new: true }
     );
 
@@ -156,6 +166,29 @@ export const restoreFolder = async (req, res) => {
     await folder.save();
     // Also restore immediate child files
     await File.updateMany({ folderId: folder._id, isTrashed: true }, { isTrashed: false, deletedAt: null });
+    res.status(200).json({ success: true, data: folder });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Toggle tag on a folder
+// @route   PATCH /api/folders/:id/tags
+// @access  Private
+export const toggleFolderTag = async (req, res) => {
+  try {
+    const { name, color } = req.body;
+    const folder = await Folder.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!folder) return res.status(404).json({ success: false, message: 'Folder not found' });
+
+    const tagIndex = folder.tags.findIndex(tag => tag.name === name);
+    if (tagIndex > -1) {
+      folder.tags.splice(tagIndex, 1);
+    } else {
+      folder.tags.push({ name, color });
+    }
+
+    await folder.save();
     res.status(200).json({ success: true, data: folder });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

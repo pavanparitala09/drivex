@@ -29,12 +29,13 @@ export const createFolder = createAsyncThunk(
 // Get folders
 export const getFolders = createAsyncThunk(
   'folders/getAll',
-  async ({ parentFolder, isStarred, isTrashed } = {}, thunkAPI) => {
+  async ({ parentFolder, isStarred, isTrashed, tag } = {}, thunkAPI) => {
     try {
       let url = '/folders?';
       if (parentFolder) url += `parentFolder=${parentFolder}&`;
       if (isStarred) url += `isStarred=${isStarred}&`;
       if (isTrashed) url += `isTrashed=${isTrashed}&`;
+      if (tag) url += `tag=${tag}&`;
       
       const response = await api.get(url);
       return response.data.data;
@@ -65,12 +66,12 @@ export const deleteFolder = createAsyncThunk(
   }
 );
 
-// Update folder (rename)
+// Update folder (rename or recolor)
 export const updateFolder = createAsyncThunk(
   'folders/update',
-  async ({ id, name }, thunkAPI) => {
+  async ({ id, name, color }, thunkAPI) => {
     try {
-      const response = await api.patch(`/folders/${id}`, { name });
+      const response = await api.patch(`/folders/${id}`, { name, color });
       return response.data.data;
     } catch (error) {
       const message =

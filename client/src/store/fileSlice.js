@@ -49,13 +49,14 @@ export const uploadFile = createAsyncThunk(
 // Get files
 export const getFiles = createAsyncThunk(
   'files/getAll',
-  async ({ folderId, search, isStarred, isTrashed } = {}, thunkAPI) => {
+  async ({ folderId, search, isStarred, isTrashed, tag } = {}, thunkAPI) => {
     try {
       let url = '/files?';
       if (folderId) url += `folderId=${folderId}&`;
       if (search) url += `search=${search}&`;
       if (isStarred) url += `isStarred=${isStarred}&`;
       if (isTrashed) url += `isTrashed=${isTrashed}&`;
+      if (tag) url += `tag=${tag}&`;
       
       const response = await api.get(url);
       return response.data.data;

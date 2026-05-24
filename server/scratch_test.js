@@ -1,39 +1,29 @@
-import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import File from './models/File.js';
+
 dotenv.config({path: './.env'});
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const uploadToCloudinary = async (fileBuffer) => {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      { 
-        resource_type: 'auto',
-        timeout: 120000
-      }, 
-      (error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
-      }
-    );
-    uploadStream.end(fileBuffer);
-  });
-};
-
 (async () => {
-    try {
-        console.log("Starting upload...");
-        const buf = Buffer.from('hello world');
-        const res = await uploadToCloudinary(buf);
-        console.log("Success:", res);
-    } catch (e) {
-        console.error("Error:", e);
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    const file = await File.findOne({ filename: /.*\.pdf$/i }).sort({ createdAt: -1 });
+    if (!file) {
+      console.log("No PDF file found.");
+      process.exit(0);
     }
+
+    console.log("Fetching URL with User-Agent header...");
+    const response = await fetch(file.url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
+    console.log("Response status:", response.status);
+    console.log("Response headers:", [...response.headers.entries()]);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    process.exit(0);
+  }
 })();

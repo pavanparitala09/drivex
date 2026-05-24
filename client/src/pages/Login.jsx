@@ -1,21 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, reset } from '../store/authSlice';
+import { googleLogin, reset } from '../store/authSlice';
 import { HardDrive } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-
-  const { email, password } = formData;
-
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { user, isLoading, isError, isSuccess, message } = useSelector(
+  const { user, isError, isSuccess, message } = useSelector(
     (state) => state.auth
   );
 
@@ -31,65 +25,40 @@ const Login = () => {
     dispatch(reset());
   }, [user, isError, isSuccess, message, navigate, dispatch]);
 
-  const onChange = (e) => {
-    setFormData((prevState) => ({
-      ...prevState,
-      [e.target.name]: e.target.value,
-    }));
+  const handleGoogleSuccess = (credentialResponse) => {
+    dispatch(googleLogin(credentialResponse.credential));
   };
 
-  const onSubmit = (e) => {
-    e.preventDefault();
-    const userData = { email, password };
-    dispatch(login(userData));
+  const handleGoogleError = () => {
+    alert('Google Sign-In was unsuccessful. Try again later.');
   };
 
   return (
     <div className="min-h-screen bg-driveGray flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-lg shadow-sm border border-driveBorder w-full max-w-md">
-        <div className="flex flex-col items-center mb-8">
-          <HardDrive className="text-driveBlue w-12 h-12 mb-2" />
-          <h1 className="text-2xl font-medium text-driveText">Sign in to DriveX</h1>
-          <p className="text-gray-500 mt-1">Continue to your files</p>
+      <div className="bg-white p-10 rounded-2xl shadow-xl border border-driveBorder w-full max-w-md">
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4">
+            <HardDrive className="text-blue-600 w-10 h-10" />
+          </div>
+          <h1 className="text-3xl font-semibold text-gray-800">DriveX</h1>
+          <p className="text-gray-500 mt-2 text-center">Secure cloud storage for all your personal files.</p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-driveText mb-1">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={email}
-              onChange={onChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-driveBlue focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-driveText mb-1">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={password}
-              onChange={onChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-driveBlue focus:border-transparent"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-driveBlue text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            {isLoading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
+        <div className="flex justify-center w-full">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            useOneTap
+            shape="rectangular"
+            theme="outline"
+            size="large"
+            text="continue_with"
+            width="100%"
+          />
+        </div>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-driveBlue hover:underline font-medium">
-            Create account
-          </Link>
+        <p className="mt-8 text-center text-sm text-gray-400">
+          By signing in, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>
     </div>

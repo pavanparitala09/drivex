@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Outlet, Navigate, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout, reset } from '../store/authSlice';
-import { HardDrive, LogOut, Settings, FolderOpen, Clock, Star, Trash2, FolderPlus, Upload, ChevronDown, Cloud } from 'lucide-react';
+import { HardDrive, LogOut, Settings, FolderOpen, Clock, Star, Trash2, FolderPlus, Upload, Cloud, FileText } from 'lucide-react';
 import UploadModal from './UploadModal';
 import FolderModal from './FolderModal';
 
@@ -13,6 +13,7 @@ export const ProtectedLayout = () => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -30,118 +31,208 @@ export const ProtectedLayout = () => {
   const storageUsedFormatted = (storageUsed / (1024 * 1024)).toFixed(2) + ' MB';
   const maxStorageFormatted = '500 MB';
 
+  const navLinks = [
+    { name: 'My Drive', icon: FolderOpen, path: '/' },
+    { name: 'Shared with me', icon: Clock, path: '/shared' },
+    { name: 'Starred', icon: Star, path: '/starred' },
+    { name: 'Trash', icon: Trash2, path: '/trash' },
+  ];
+
+  const standardTags = [
+    { name: 'High Priority', label: '🔴 High', color: '#ef4444' },
+    { name: 'Work', label: '🔵 Work', color: '#3b82f6' },
+    { name: 'Receipts', label: '🟢 Receipts', color: '#10b981' },
+    { name: 'Personal', label: '🟡 Personal', color: '#f59e0b' }
+  ];
+
   return (
-    <div className="flex h-screen bg-driveGray">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-driveBorder flex flex-col">
-        <div className="p-4 flex items-center space-x-2">
-          <HardDrive className="text-driveBlue w-8 h-8" />
-          <span className="text-xl font-medium text-driveText">DriveX</span>
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
+      {/* Modern Glass Sidebar */}
+      <aside className="w-72 m-4 rounded-3xl glass flex flex-col z-20 border border-slate-200/50 shadow-xl bg-white/80">
+        
+        {/* Elegant Logo Header */}
+        <div className="p-6 pb-4 flex items-center space-x-3">
+          <div className="bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 p-2.5 rounded-xl shadow-lg shadow-indigo-100 text-white flex items-center justify-center">
+            <HardDrive className="w-5 h-5 animate-pulse" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 tracking-tight">DriveX</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-0.5">Cloud Storage</span>
+          </div>
         </div>
         
-        <div className="px-3 mt-4 relative">
+        {/* Modern Capsule Action Button */}
+        <div className="px-6 py-2 relative">
           <button 
             onClick={() => setIsNewMenuOpen(!isNewMenuOpen)}
-            className="bg-white border hover:bg-driveGray text-driveText font-medium py-3 px-6 rounded-full shadow-sm flex items-center transition-colors"
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            <span className="text-3xl font-light mr-2 leading-none">+</span> New
+            <span className="text-xl font-light leading-none">+</span> Create New
           </button>
           
           {isNewMenuOpen && (
-            <div className="absolute top-16 left-3 w-56 bg-white rounded-md shadow-lg border border-driveBorder py-2 z-10">
+            <div className="absolute top-16 left-6 right-6 bg-white rounded-2xl shadow-xl border border-slate-100 py-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
               <button 
                 onClick={() => { setIsFolderModalOpen(true); setIsNewMenuOpen(false); }}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center text-sm"
+                className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center text-sm font-semibold text-slate-700 transition-colors"
               >
-                <FolderPlus className="w-5 h-5 mr-3 text-gray-500" /> New folder
+                <div className="bg-indigo-50 p-2 rounded-lg mr-3 text-indigo-600">
+                  <FolderPlus className="w-4.5 h-4.5" />
+                </div>
+                New folder
               </button>
-              <div className="border-t border-gray-100 my-1"></div>
+              <div className="border-t border-slate-50 my-1"></div>
               <button 
                 onClick={() => { setIsUploadModalOpen(true); setIsNewMenuOpen(false); }}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center text-sm"
+                className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center text-sm font-semibold text-slate-700 transition-colors"
               >
-                <Upload className="w-5 h-5 mr-3 text-gray-500" /> File upload
+                <div className="bg-purple-50 p-2 rounded-lg mr-3 text-purple-600">
+                  <Upload className="w-4.5 h-4.5" />
+                </div>
+                File upload
+              </button>
+              <div className="border-t border-slate-50 my-1"></div>
+              <button 
+                onClick={() => { navigate('/editor/new'); setIsNewMenuOpen(false); }}
+                className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center text-sm font-semibold text-slate-700 transition-colors"
+              >
+                <div className="bg-emerald-50 p-2 rounded-lg mr-3 text-emerald-600">
+                  <FileText className="w-4.5 h-4.5" />
+                </div>
+                New document
               </button>
             </div>
           )}
         </div>
 
-        <nav className="flex-1 mt-6 px-2 space-y-1">
-          <Link to="/" className="flex items-center px-4 py-2 text-sm font-medium rounded-r-full bg-driveLightBlue text-driveBlue">
-            <FolderOpen className="mr-3 w-5 h-5" />
-            My Drive
-          </Link>
-          <Link to="/shared" className="flex items-center px-4 py-2 text-sm font-medium rounded-r-full hover:bg-driveGray text-driveText">
-            <Clock className="mr-3 w-5 h-5" />
-            Shared with me
-          </Link>
-          <Link to="/starred" className="flex items-center px-4 py-2 text-sm font-medium rounded-r-full hover:bg-driveGray text-driveText">
-            <Star className="mr-3 w-5 h-5" />
-            Starred
-          </Link>
-          <Link to="/trash" className="flex items-center px-4 py-2 text-sm font-medium rounded-r-full hover:bg-driveGray text-driveText transition-colors duration-200">
-            <Trash2 className="mr-3 w-5 h-5" />
-            Trash
-          </Link>
-        </nav>
+        {/* Scrollable Navigation Area */}
+        <div className="flex-1 overflow-y-auto no-scrollbar my-4 space-y-6">
+          <nav className="px-4 space-y-1">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.path;
+              const Icon = link.icon;
+              return (
+                <Link 
+                  key={link.name}
+                  to={link.path} 
+                  className={`flex items-center px-4 py-3 text-xs font-bold rounded-xl transition-all relative ${
+                    isActive 
+                      ? 'bg-indigo-50 text-indigo-700 shadow-sm border-l-4 border-indigo-600 rounded-l-none' 
+                      : 'text-slate-500 hover:bg-slate-100/60 hover:text-slate-800'
+                  }`}
+                >
+                  <Icon className={`mr-3.5 w-4.5 h-4.5 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+                  {link.name}
+                </Link>
+              )
+            })}
+          </nav>
 
-        <div className="px-6 py-4">
-          <div className="flex items-center text-sm text-driveText mb-3">
-            <Cloud className="w-5 h-5 mr-3 text-gray-500" />
-            <span>Storage ({storagePercentage}% full)</span>
+          {/* Dynamic Tag Filters in Sidebar */}
+          <div className="px-4 border-t border-slate-100/60 pt-4">
+            <span className="px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2.5">Categories</span>
+            <div className="space-y-0.5">
+              {standardTags.map((tag) => {
+                const isActive = location.pathname === `/tags/${tag.name}`;
+                return (
+                  <Link 
+                    key={tag.name}
+                    to={`/tags/${tag.name}`}
+                    className={`flex items-center px-4 py-2.5 text-xs font-bold rounded-xl transition-all ${
+                      isActive 
+                        ? 'bg-slate-100 text-indigo-700 shadow-sm border-l-4 border-indigo-600 rounded-l-none' 
+                        : 'text-slate-500 hover:bg-slate-100/60 hover:text-slate-800'
+                    }`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full mr-3.5 flex-shrink-0" style={{ backgroundColor: tag.color }} />
+                    {tag.name}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2 overflow-hidden">
-            <div className={`h-1.5 rounded-full transition-all duration-1000 ease-out ${storagePercentage > 90 ? 'bg-red-500' : storagePercentage > 75 ? 'bg-yellow-500' : 'bg-driveBlue'}`} style={{ width: `${storagePercentage}%` }}></div>
-          </div>
-          <p className="text-xs text-gray-500 mb-3">{storageUsedFormatted} of {maxStorageFormatted} used</p>
-          <button className="w-full py-2 border border-gray-300 rounded-full text-driveBlue text-sm font-medium hover:bg-blue-50 transition-colors shadow-sm">
-            Get more storage
-          </button>
         </div>
 
-        <div className="p-4 border-t border-driveBorder">
-          <div className="flex items-center mb-2">
-            <div className="w-8 h-8 rounded-full bg-driveBlue text-white flex items-center justify-center font-bold">
-              {user?.name?.charAt(0)?.toUpperCase() || '?'}
-            </div>
+        {/* Premium Inline Storage Widget */}
+        <div className="px-6 py-4 mt-auto border-t border-slate-100/60 bg-slate-50/40">
+          <div className="flex items-center justify-between text-[11px] text-slate-500 mb-2">
+            <span className="font-bold flex items-center gap-1.5">
+              <Cloud className="w-4 h-4 text-indigo-500" /> Storage
+            </span>
+            <span className="font-extrabold text-slate-700">{storagePercentage}% Used</span>
+          </div>
+          
+          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden mb-2 shadow-inner">
+            <div 
+              className={`h-1.5 rounded-full transition-all duration-1000 ease-out bg-gradient-to-r ${
+                storagePercentage > 90 ? 'from-red-500 to-rose-600' : storagePercentage > 75 ? 'from-amber-400 to-orange-500' : 'from-indigo-500 to-purple-500'
+              }`} 
+              style={{ width: `${storagePercentage}%` }}
+            ></div>
+          </div>
+          
+          <div className="flex items-center justify-between mt-2.5">
+            <span className="text-[10px] text-slate-400 font-bold">{storageUsedFormatted} of {maxStorageFormatted}</span>
+            <Link 
+              to="/storage" 
+              className="text-[10px] font-extrabold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-wider"
+            >
+              Clean Up →
+            </Link>
+          </div>
+        </div>
+
+        {/* User profile row */}
+        <div className="p-5 border-t border-slate-100/60 flex items-center justify-between bg-slate-50/20">
+          <div className="flex items-center min-w-0 mr-3">
+            {user?.avatar ? (
+              <img src={user.avatar} alt="Avatar" referrerPolicy="no-referrer" className="w-9 h-9 rounded-full shadow-sm border border-slate-200" />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center font-bold shadow-md flex-shrink-0 text-sm">
+                {user?.name?.charAt(0)?.toUpperCase() || '?'}
+              </div>
+            )}
             <div className="ml-3 truncate">
-              <p className="text-sm font-medium text-driveText truncate">{user?.name || 'User'}</p>
-              <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
+              <p className="text-xs font-extrabold text-slate-800 truncate">{user?.name || 'User'}</p>
+              <p className="text-[10px] font-semibold text-slate-400 truncate mt-0.5">{user?.email || ''}</p>
             </div>
           </div>
           <button 
             onClick={handleLogout}
-            className="flex items-center w-full px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all flex-shrink-0 cursor-pointer shadow-sm hover:shadow-inner bg-white border border-slate-200/50"
+            title="Sign Out"
           >
-            <LogOut className="mr-2 w-4 h-4" />
-            Logout
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navbar */}
-        <header className="h-16 bg-white border-b border-driveBorder flex items-center justify-between px-6">
-          <div className="flex-1 max-w-2xl">
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Search in DriveX" 
-                className="w-full bg-driveGray border-transparent focus:bg-white focus:border-driveBlue focus:ring-1 focus:ring-driveBlue rounded-md py-2 px-4 outline-none transition-all"
-              />
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col h-full relative z-10">
+        {/* Modern Top Navbar */}
+        <header className="h-20 flex items-center justify-between px-8 py-4 z-20">
+          <div className="flex-1 max-w-2xl relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg className="w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
+            <input 
+              type="text" 
+              placeholder="Search files, folders, and more..." 
+              className="w-full bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 rounded-2xl py-3 pl-12 pr-4 outline-none transition-all shadow-sm text-slate-700 placeholder-slate-400 font-medium"
+            />
           </div>
-          <div className="flex items-center space-x-4">
-            <button className="text-gray-500 hover:bg-driveGray p-2 rounded-full">
+          <div className="flex items-center space-x-4 ml-6">
+            <button className="text-slate-400 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-200 shadow-sm p-3 rounded-xl transition-all hover:scale-105 active:scale-95">
               <Settings className="w-5 h-5" />
             </button>
           </div>
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-6">
-          <Outlet />
+        <div className="flex-1 overflow-auto px-8 pb-8 no-scrollbar relative z-10">
+          <div className="bg-white/60 backdrop-blur-3xl min-h-full rounded-3xl p-8 border border-slate-100 shadow-sm">
+            <Outlet />
+          </div>
         </div>
       </main>
 

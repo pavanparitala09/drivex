@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { getFiles, deleteFile, toggleStarFile } from '../store/fileSlice';
 import { getFolders, deleteFolder, updateFolder, toggleStarFolder } from '../store/folderSlice';
@@ -22,13 +23,19 @@ const formatSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-const colors = ['#e2e8f0', '#fecaca', '#fef08a', '#bbf7d0', '#bfdbfe', '#e9d5ff', '#fbcfe8'];
+const standardTags = [
+  { name: 'High Priority', label: '🔴 High', color: '#ef4444' },
+  { name: 'Work', label: '🔵 Work', color: '#3b82f6' },
+  { name: 'Receipts', label: '🟢 Receipts', color: '#10b981' },
+  { name: 'Personal', label: '🟡 Personal', color: '#f59e0b' }
+];
 
-const StarredFiles = () => {
-  const files = useSelector((state) => state.files.files.filter((file) => file.isStarred));
-  const folders = useSelector((state) => state.folders.folders.filter((folder) => folder.isStarred));
+const TaggedFiles = () => {
+  const { tagName } = useParams();
+  const { files } = useSelector((state) => state.files);
+  const { folders } = useSelector((state) => state.folders);
   const dispatch = useDispatch();
-  
+
   const [contextMenu, setContextMenu] = useState(null);
   const [previewFile, setPreviewFile] = useState(null);
   const [renameItem, setRenameItem] = useState(null);
@@ -67,32 +74,14 @@ const StarredFiles = () => {
     return () => clearInterval(interval);
   }, [aiRenameLoading]);
 
-  const standardTags = [
-    { name: 'High Priority', label: '🔴 High', color: '#ef4444' },
-    { name: 'Work', label: '🔵 Work', color: '#3b82f6' },
-    { name: 'Receipts', label: '🟢 Receipts', color: '#10b981' },
-    { name: 'Personal', label: '🟡 Personal', color: '#f59e0b' }
-  ];
-
-  const handleTagToggle = async (id, type, name, color) => {
-    try {
-      if (type === 'file') {
-        await api.patch(`/files/${id}/tags`, { name, color });
-        dispatch(getFiles({ isStarred: true }));
-      } else {
-        await api.patch(`/folders/${id}/tags`, { name, color });
-        dispatch(getFolders({ isStarred: true }));
-      }
-      setContextMenu(null);
-    } catch (err) {
-      console.error(err);
-    }
+  const fetchTaggedData = () => {
+    dispatch(getFiles({ tag: tagName }));
+    dispatch(getFolders({ tag: tagName }));
   };
 
   useEffect(() => {
-    dispatch(getFiles({ isStarred: true }));
-    dispatch(getFolders({ isStarred: true }));
-  }, [dispatch]);
+    fetchTaggedData();
+  }, [dispatch, tagName]);
 
   useEffect(() => {
     const closeMenu = () => setContextMenu(null);
@@ -108,7 +97,7 @@ const StarredFiles = () => {
     let y = e.clientY;
     
     if (window.innerWidth - x < 250) x -= 250;
-    if (window.innerHeight - y < 350) y -= 350;
+    if (window.innerHeight - y < 450) y -= 450;
 
     setContextMenu({
       mouseX: x,
@@ -123,8 +112,11 @@ const StarredFiles = () => {
       title: `Delete ${type === 'file' ? 'File' : 'Folder'}`,
       message: `Are you sure you want to move this ${type} to trash?`,
       onConfirm: () => {
-        if (type === 'file') dispatch(deleteFile(id));
-        else dispatch(deleteFolder(id));
+        if (type === 'file') {
+          dispatch(deleteFile(id)).then(() => fetchTaggedData());
+        } else {
+          dispatch(deleteFolder(id)).then(() => fetchTaggedData());
+        }
         setToast({ type: 'success', message: `${type === 'file' ? 'File' : 'Folder'} moved to trash` });
       }
     });
@@ -137,9 +129,18 @@ const StarredFiles = () => {
     setContextMenu(null);
   };
 
-  const handleColorChange = (id, color) => {
-    dispatch(updateFolder({ id, color }));
-    setContextMenu(null);
+  const handleTagToggle = async (id, type, name, color) => {
+    try {
+      if (type === 'file') {
+        await api.patch(`/files/${id}/tags`, { name, color });
+      } else {
+        await api.patch(`/folders/${id}/tags`, { name, color });
+      }
+      fetchTaggedData();
+      setContextMenu(null);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleAIRename = async (file) => {
@@ -167,36 +168,16 @@ const StarredFiles = () => {
     }
   };
 
-  const handleShare = async (item) => {
-    setContextMenu(null);
-    const url = item.url || window.location.href;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Share ${item.name || item.filename}`,
-          text: `Check out this file: ${item.name || item.filename}`,
-          url: url,
-        });
-      } catch (err) {
-        console.log('Share failed:', err);
-      }
-    } else {
-      navigator.clipboard.writeText(url);
-      setToast({ type: 'success', message: 'Link copied to clipboard!' });
-    }
-  };
-
-  const handleAction = (actionName) => {
-    setToast({ type: 'success', message: `${actionName} functionality coming soon!` });
-    setContextMenu(null);
-  };
-
   return (
-    <div className="h-full flex flex-col" onContextMenu={(e) => {
+    <div className="h-full flex flex-col animate-in fade-in duration-300" onContextMenu={(e) => {
         if (e.target === e.currentTarget) setContextMenu(null);
     }}>
       <div className="flex items-center text-xl font-semibold text-slate-800 mb-8 px-2">
-        <span className="px-3 py-1.5 rounded-xl text-indigo-600 bg-indigo-50">Starred</span>
+        <span className="text-slate-400 font-medium mr-2">Tag:</span>
+        <span className="px-3 py-1.5 rounded-xl text-indigo-600 bg-indigo-50 flex items-center gap-2">
+          <Tag className="w-4 h-4" />
+          {tagName}
+        </span>
       </div>
 
       {/* Folders Section */}
@@ -225,7 +206,7 @@ const StarredFiles = () => {
                  {folder.tags && folder.tags.length > 0 && (
                    <div className="absolute bottom-2 right-2 flex gap-1">
                      {folder.tags.map(t => (
-                       <span key={t.name} className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: t.color }} title={t.name} />
+                       <span key={t.name} className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }} title={t.name} />
                      ))}
                    </div>
                  )}
@@ -238,7 +219,7 @@ const StarredFiles = () => {
       {/* Files Section */}
       <div className="mb-8 px-2 flex-1">
         <h2 className="text-xs font-bold text-slate-400 mb-5 uppercase tracking-wider">Files</h2>
-        {files.length > 0 ? (
+        {files && files.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
             {files.map((file) => (
               <div 
@@ -250,7 +231,7 @@ const StarredFiles = () => {
                                  file.filename.endsWith('.js') || 
                                  file.filename.endsWith('.html') || 
                                  file.filename.endsWith('.css');
-                  const isPDF = file.mimeType === 'application/pdf' || file.filename.endsWith('.pdf');
+                  const isPDF = file.mimeType === 'application/pdf' || file.filename.toLowerCase().endsWith('.pdf');
                   if (file.mimeType.startsWith('image/') || file.mimeType.startsWith('video/') || isText || isPDF) {
                     setPreviewFile(file);
                   } else {
@@ -268,13 +249,6 @@ const StarredFiles = () => {
                          <video src={file.url} className="w-full h-full object-cover" muted preload="metadata" />
                       ) : (
                          <img src={file.url} alt={file.filename} className="w-full h-full object-cover" />
-                      )}
-                      {file.mimeType.startsWith('video/') && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/20 group-hover:bg-slate-900/40 transition-all">
-                           <div className="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg opacity-90 group-hover:scale-110 transition-all">
-                             <div className="w-0 h-0 border-t-[7px] border-b-[7px] border-l-[12px] border-t-transparent border-b-transparent border-l-indigo-600 ml-1"></div>
-                           </div>
-                        </div>
                       )}
                     </div>
                   ) : (
@@ -306,7 +280,7 @@ const StarredFiles = () => {
           </div>
         ) : (
           <div className="text-center py-20 bg-slate-50/50 border border-dashed border-slate-200 rounded-3xl">
-            <p className="text-slate-400 font-medium text-lg">No starred files.</p>
+            <p className="text-slate-400 font-medium text-lg">No files with this tag.</p>
           </div>
         )}
       </div>
@@ -326,11 +300,7 @@ const StarredFiles = () => {
             <Star className={`w-4 h-4 mr-3 ${contextMenu.item.isStarred ? 'fill-amber-400 text-amber-400' : 'text-slate-400'}`} /> {contextMenu.item.isStarred ? 'Remove from Starred' : 'Add to Starred'}
           </button>
           
-          <button onClick={() => {
-            setRenameItem(contextMenu.item);
-            setRenameType(contextMenu.type);
-            setContextMenu(null);
-          }} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 flex items-center transition-colors">
+          <button onClick={() => { setRenameItem(contextMenu.item); setRenameType(contextMenu.type); setContextMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 flex items-center transition-colors">
             <Edit className="w-4 h-4 mr-3 text-slate-400" /> Rename
           </button>
           
@@ -340,15 +310,9 @@ const StarredFiles = () => {
             </button>
           )}
           
-          {contextMenu.type === 'file' ? (
-            <button onClick={() => { setShareItem(contextMenu.item); setContextMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 flex items-center transition-colors">
-              <Share2 className="w-4 h-4 mr-3 text-slate-400" /> Get public link
-            </button>
-          ) : (
-            <button onClick={() => handleShare(contextMenu.item)} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 flex items-center transition-colors">
-              <Share2 className="w-4 h-4 mr-3 text-slate-400" /> Share
-            </button>
-          )}
+          <button onClick={() => { setShareItem(contextMenu.item); setContextMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 flex items-center transition-colors">
+            <Share2 className="w-4 h-4 mr-3 text-slate-400" /> Get public link
+          </button>
 
           {/* Tags Configuration in Context Menu */}
           <div className="px-4 py-2.5 border-t border-slate-100 mt-1">
@@ -375,35 +339,11 @@ const StarredFiles = () => {
                })}
             </div>
           </div>
-          
-          {contextMenu.type === 'folder' && (
-            <div className="px-4 py-2.5 border-t border-slate-100 mt-1">
-              <div className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                 <Palette className="w-3.5 h-3.5 mr-2" /> Folder Color
-              </div>
-              <div className="flex gap-2 pl-6">
-                 {colors.map(color => (
-                   <div 
-                     key={color} 
-                     onClick={() => handleColorChange(contextMenu.item._id, color)}
-                     className="w-5 h-5 rounded-full cursor-pointer hover:scale-125 transition-transform shadow-sm border border-black/5" 
-                     style={{ backgroundColor: color }}
-                   />
-                 ))}
-                 <div 
-                   onClick={() => handleColorChange(contextMenu.item._id, '')}
-                   className="w-5 h-5 rounded-full cursor-pointer hover:scale-125 transition-transform bg-slate-300 flex items-center justify-center border border-black/5"
-                 >
-                   <span className="text-[10px] text-white">✖</span>
-                 </div>
-              </div>
-            </div>
-          )}
 
           <div className="border-t border-slate-100 my-1"></div>
           
           <button onClick={() => handleDelete(contextMenu.item._id, contextMenu.type)} className="w-full text-left px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 flex items-center transition-colors font-medium">
-            <Trash2 className="w-4 h-4 mr-3 text-rose-500" /> Move to Trash
+            <Trash2 className="w-4 h-4 mr-3 text-rose-500" /> Delete
           </button>
         </div>
       )}
@@ -416,20 +356,14 @@ const StarredFiles = () => {
 
       <RenameModal 
         isOpen={!!renameItem} 
-        onClose={() => {
-          setRenameItem(null);
-          setRenameType(null);
-        }}
+        onClose={() => { setRenameItem(null); setRenameType(null); fetchTaggedData(); }}
         item={renameItem}
         type={renameType}
       />
 
       <ShareLinkModal 
         isOpen={!!shareItem}
-        onClose={() => {
-          setShareItem(null);
-          dispatch(getFiles({ isStarred: true }));
-        }}
+        onClose={() => setShareItem(null)}
         file={shareItem}
       />
 
@@ -486,7 +420,7 @@ const StarredFiles = () => {
                       newName: suggestedName,
                       type: 'rename'
                     });
-                    dispatch(getFiles({ isStarred: true }));
+                    fetchTaggedData();
                   } catch (err) {
                     setToast({ type: 'error', message: err.response?.data?.message || 'Failed to rename' });
                   }
@@ -632,4 +566,4 @@ const StarredFiles = () => {
   );
 };
 
-export default StarredFiles;
+export default TaggedFiles;

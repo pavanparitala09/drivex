@@ -2,18 +2,23 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ProtectedLayout } from './components/Layout';
 import Login from './pages/Login';
-import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import SharedFiles from './pages/SharedFiles';
 import StarredFiles from './pages/StarredFiles';
 import Trash from './pages/Trash';
+import StorageAnalytics from './pages/StorageAnalytics';
+import TaggedFiles from './pages/TaggedFiles';
+import DocumentEditor from './pages/DocumentEditor';
+import PublicShareView from './pages/PublicShareView';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        
+        {/* Unauthenticated Public Share Landing Lock Screen */}
+        <Route path="/shared/public/:token" element={<PublicShareView />} />
         
         {/* Protected Routes */}
         <Route element={<ProtectedLayout />}>
@@ -21,6 +26,9 @@ function App() {
           <Route path="/shared" element={<SharedFiles />} />
           <Route path="/starred" element={<StarredFiles />} />
           <Route path="/trash" element={<Trash />} />
+          <Route path="/storage" element={<StorageAnalytics />} />
+          <Route path="/tags/:tagName" element={<TaggedFiles />} />
+          <Route path="/editor/:id" element={<DocumentEditor />} />
         </Route>
       </Routes>
     </Router>

@@ -5,6 +5,10 @@ const folderSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  color: {
+    type: String,
+    default: '',
+  },
   parentFolder: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Folder',
@@ -27,6 +31,10 @@ const folderSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  tags: [{
+    name: { type: String, required: true },
+    color: { type: String, required: true }
+  }],
 }, { timestamps: true });
 
 const Folder = mongoose.model('Folder', folderSchema);

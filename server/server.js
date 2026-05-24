@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.js';
 import fileRoutes from './routes/files.js';
 import folderRoutes from './routes/folders.js';
 import shareRoutes from './routes/share.js';
+import publicShareRoutes from './routes/publicShare.js';
 import { initCronJobs } from './jobs/cleanup.js';
 
 dotenv.config();
@@ -23,7 +24,13 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    frameguard: false,
+  })
+);
 app.use(morgan('dev'));
 
 // Routes
@@ -31,6 +38,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/folders', folderRoutes);
 app.use('/api/share', shareRoutes);
+app.use('/api/public-share', publicShareRoutes);
 
 // Basic Route
 app.get('/', (req, res) => {
@@ -43,3 +51,5 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   initCronJobs();
 });
+
+// Restart server to reload environment variables
