@@ -31,7 +31,7 @@ const SharedFiles = () => {
             {sharedFiles.map((file) => (
               <div 
                 key={file._id} 
-                onDoubleClick={() => window.open(file.url, '_blank')}
+                onClick={() => window.open(file.url, '_blank')}
                 className="bg-white border border-driveBorder rounded-lg p-4 flex flex-col justify-between h-40 hover:shadow-md cursor-pointer transition-shadow"
               >
                 <div className="flex items-start justify-between">

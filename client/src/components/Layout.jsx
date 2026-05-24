@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout, reset } from '../store/authSlice';
-import { HardDrive, LogOut, Settings, FolderOpen, Clock, Star, Trash2, FolderPlus, Upload, Cloud, FileText } from 'lucide-react';
+import { HardDrive, LogOut, Settings, FolderOpen, Clock, Star, Trash2, FolderPlus, Upload, Cloud, FileText, Menu } from 'lucide-react';
 import UploadModal from './UploadModal';
 import FolderModal from './FolderModal';
 
@@ -10,10 +10,15 @@ export const ProtectedLayout = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname]);
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -46,9 +51,19 @@ export const ProtectedLayout = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden relative">
+      {/* Mobile Drawer Backdrop */}
+      {isMobileSidebarOpen && (
+        <div 
+          onClick={() => setIsMobileSidebarOpen(false)} 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 lg:hidden transition-all duration-300 animate-in fade-in"
+        />
+      )}
+
       {/* Modern Glass Sidebar */}
-      <aside className="w-72 m-4 rounded-3xl glass flex flex-col z-20 border border-slate-200/50 shadow-xl bg-white/80">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 m-4 rounded-3xl bg-white/95 backdrop-blur-md shadow-2xl border border-slate-200/50 flex flex-col transition-transform duration-300 transform lg:translate-x-0 lg:static lg:m-4 lg:w-72 lg:flex ${
+        isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-[110%]'
+      }`}>
         
         {/* Elegant Logo Header */}
         <div className="p-6 pb-4 flex items-center space-x-3">
@@ -208,29 +223,38 @@ export const ProtectedLayout = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-full relative z-10">
+      <main className="flex-1 flex flex-col h-full relative z-10 w-full min-w-0">
         {/* Modern Top Navbar */}
-        <header className="h-20 flex items-center justify-between px-8 py-4 z-20">
-          <div className="flex-1 max-w-2xl relative group">
+        <header className="h-20 flex items-center justify-between px-4 md:px-8 py-4 z-20 gap-3">
+          {/* Hamburger Menu Button */}
+          <button 
+            onClick={() => setIsMobileSidebarOpen(true)} 
+            className="lg:hidden p-2.5 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm rounded-2xl text-slate-600 transition-all active:scale-95 flex-shrink-0 flex items-center justify-center"
+            title="Open Menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          <div className="flex-1 max-w-2xl relative group min-w-0">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <svg className="w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
             <input 
               type="text" 
-              placeholder="Search files, folders, and more..." 
-              className="w-full bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 rounded-2xl py-3 pl-12 pr-4 outline-none transition-all shadow-sm text-slate-700 placeholder-slate-400 font-medium"
+              placeholder="Search files..." 
+              className="w-full bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 rounded-2xl py-3 pl-12 pr-4 outline-none transition-all shadow-sm text-slate-700 placeholder-slate-400 font-medium text-sm truncate"
             />
           </div>
-          <div className="flex items-center space-x-4 ml-6">
-            <button className="text-slate-400 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-200 shadow-sm p-3 rounded-xl transition-all hover:scale-105 active:scale-95">
+          <div className="flex items-center space-x-3 ml-2 flex-shrink-0">
+            <button className="text-slate-400 hover:text-indigo-600 bg-white border border-slate-200 hover:border-indigo-200 shadow-sm p-3 rounded-2xl transition-all hover:scale-105 active:scale-95">
               <Settings className="w-5 h-5" />
             </button>
           </div>
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto px-8 pb-8 no-scrollbar relative z-10">
-          <div className="bg-white/60 backdrop-blur-3xl min-h-full rounded-3xl p-8 border border-slate-100 shadow-sm">
+        <div className="flex-1 overflow-auto px-4 pb-4 md:px-8 md:pb-8 no-scrollbar relative z-10">
+          <div className="bg-white/60 backdrop-blur-3xl min-h-full rounded-3xl p-4 md:p-8 border border-slate-100 shadow-sm">
             <Outlet />
           </div>
         </div>

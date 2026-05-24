@@ -82,11 +82,11 @@ const Trash = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 px-1">
         <div className="flex items-center text-xl font-medium text-driveText">
           <span>Trash</span>
         </div>
-        <p className="text-sm text-gray-500 italic">Items in trash are deleted forever after 15 days.</p>
+        <p className="text-xs sm:text-sm text-slate-400 italic">Items in trash are deleted forever after 15 days.</p>
       </div>
 
       {folders && folders.length > 0 && (

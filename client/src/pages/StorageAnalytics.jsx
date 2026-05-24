@@ -99,12 +99,12 @@ const StorageAnalytics = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex items-center justify-between px-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Storage Insights</h1>
-          <p className="text-sm font-medium text-slate-400 mt-1">Detailed visualization of your usage and cleanup recommendations</p>
+          <p className="text-xs sm:text-sm font-medium text-slate-400 mt-1">Detailed visualization of your usage and cleanup recommendations</p>
         </div>
-        <button onClick={fetchData} className="p-3 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm rounded-xl text-slate-600 hover:text-indigo-600 transition-colors">
+        <button onClick={fetchData} className="p-3 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm rounded-xl text-slate-600 hover:text-indigo-600 transition-colors w-fit flex-shrink-0">
           <RefreshCw className="w-5 h-5" />
         </button>
       </div>
@@ -186,10 +186,10 @@ const StorageAnalytics = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-slate-100 mb-6 gap-6">
+          <div className="flex border-b border-slate-100 mb-6 gap-4 sm:gap-6 overflow-x-auto no-scrollbar whitespace-nowrap scroll-smooth">
             <button
               onClick={() => setActiveTab('large')}
-              className={`pb-4 text-sm font-bold transition-all border-b-2 ${
+              className={`pb-4 text-xs sm:text-sm font-bold transition-all border-b-2 flex-shrink-0 ${
                 activeTab === 'large' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -197,7 +197,7 @@ const StorageAnalytics = () => {
             </button>
             <button
               onClick={() => setActiveTab('duplicates')}
-              className={`pb-4 text-sm font-bold transition-all border-b-2 ${
+              className={`pb-4 text-xs sm:text-sm font-bold transition-all border-b-2 flex-shrink-0 ${
                 activeTab === 'duplicates' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -205,7 +205,7 @@ const StorageAnalytics = () => {
             </button>
             <button
               onClick={() => setActiveTab('old')}
-              className={`pb-4 text-sm font-bold transition-all border-b-2 ${
+              className={`pb-4 text-xs sm:text-sm font-bold transition-all border-b-2 flex-shrink-0 ${
                 activeTab === 'old' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -271,16 +271,16 @@ const StorageAnalytics = () => {
 const FileCleanupRow = ({ file, onDelete, label }) => {
   return (
     <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-slate-200 transition-colors">
-      <div className="flex flex-col min-w-0 pr-4">
+      <div className="flex flex-col min-w-0 pr-4 flex-1">
         <span className="text-sm font-semibold text-slate-800 truncate" title={file.filename}>
           {file.filename}
         </span>
-        <div className="flex items-center gap-3 mt-1">
-          <span className="text-xs font-bold text-slate-400">{formatSize(file.size)}</span>
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 mt-1 min-w-0">
+          <span className="text-xs font-bold text-slate-400 flex-shrink-0">{formatSize(file.size)}</span>
           {label && (
             <>
-              <span className="text-slate-300 text-xs">•</span>
-              <span className="text-xs font-semibold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-lg">{label}</span>
+              <span className="text-slate-300 text-xs hidden sm:inline">•</span>
+              <span className="text-xs font-semibold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-lg truncate max-w-[150px] sm:max-w-xs" title={label}>{label}</span>
             </>
           )}
         </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getFiles, deleteFile, toggleStarFile } from '../store/fileSlice';
 import { getFolders, deleteFolder, updateFolder, toggleStarFolder } from '../store/folderSlice';
-import { File, Folder, Image, FileText, Film, Trash2, Edit, Share2, Info, Star, Palette, Tag, Sparkles } from 'lucide-react';
+import { File, Folder, Image, FileText, Film, Trash2, Edit, Share2, Info, Star, Palette, Tag, Sparkles, MoreVertical } from 'lucide-react';
 import FilePreviewModal from '../components/FilePreviewModal';
 import RenameModal from '../components/RenameModal';
 import ShareLinkModal from '../components/ShareLinkModal';
@@ -219,8 +219,21 @@ const StarredFiles = () => {
                     style={{ fill: folder.color || '#94a3b8', color: folder.color || '#94a3b8' }} 
                  />
                  <span className="text-sm font-medium text-slate-700 truncate w-full text-center">{folder.name}</span>
-                 {folder.isStarred && <Star className="w-4 h-4 fill-amber-400 text-amber-400 absolute top-3 right-3" />}
+                 {folder.isStarred && <Star className="w-4 h-4 fill-amber-400 text-amber-400 absolute top-3 left-3" />}
                  
+                 {/* Three-dots menu button for actions */}
+                 <button
+                   onClick={(e) => {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     handleContextMenu(e, folder, 'folder');
+                   }}
+                   className="absolute top-3 right-3 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100/60 transition-colors lg:opacity-0 lg:group-hover:opacity-100 cursor-pointer z-10"
+                   title="Actions"
+                 >
+                   <MoreVertical className="w-4 h-4" />
+                 </button>
+
                  {/* Render tag color dots */}
                  {folder.tags && folder.tags.length > 0 && (
                    <div className="absolute bottom-2 right-2 flex gap-1">
@@ -243,7 +256,7 @@ const StarredFiles = () => {
             {files.map((file) => (
               <div 
                 key={file._id} 
-                onDoubleClick={() => {
+                onClick={() => {
                   const isText = file.mimeType.startsWith('text/') || 
                                  file.filename.endsWith('.md') || 
                                  file.filename.endsWith('.json') || 
@@ -295,11 +308,22 @@ const StarredFiles = () => {
                 </div>
                 
                 {/* Header/Footer */}
-                <div className="flex items-center justify-between p-4 bg-white border-t border-slate-50 z-10">
-                  <div className="flex flex-col truncate pr-2">
+                <div className="flex items-center justify-between p-4 bg-white border-t border-slate-50 z-10 w-full min-w-0">
+                  <div className="flex flex-col truncate pr-2 flex-1">
                     <span className="text-sm font-semibold text-slate-800 truncate" title={file.filename}>{file.filename}</span>
                     <span className="text-xs mt-0.5 text-slate-400 font-medium">{formatSize(file.size)}</span>
                   </div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleContextMenu(e, file, 'file');
+                    }}
+                    className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0 cursor-pointer"
+                    title="Actions"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))}
