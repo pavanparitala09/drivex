@@ -23,7 +23,12 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({ origin: ['http://localhost:5173',
+  'https://drivex-tawny.vercel.app',
+  'https://drivex-git-master-paritala-pavan-kumars-projects.vercel.app',
+  'https://drivex-je3x0a08l-paritala-pavan-kumars-projects.vercel.app',
+  'https://drivex-f84g83n25-paritala-pavan-kumars-projects.vercel.app'],
+ credentials: true, }));
 app.use(
   helmet({
     contentSecurityPolicy: false,
